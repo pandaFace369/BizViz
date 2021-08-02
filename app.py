@@ -18,8 +18,8 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SOLAR],
             )
 
 # Load Data
-df = pd.DataFrame.from_records([{'Principal': 0, 'Rate': 0, 'Frequency': 0, 'StartDate': 0, 'EndDate': 0}])
-    
+df = pd.DataFrame.from_records([{'Principal': 0, 'Category': 0, 'Rate': 0, 'Frequency': 0, 'StartDate': date.today(), 'EndDate': date.today()}])
+          
 df2 = px.data.gapminder()
 df_2007 = df2.query("year==2007")
 
@@ -88,16 +88,34 @@ app.layout = dbc.Container([
                     className = "text-center"
                 ),
 
-                html.Div(
-                    className = "d-flex flex-wrap justify-content-center p-3 center mb-4",
-                    children = dcc.Input(
-                        id = "Principal",
-                        type="number",
-                        value= 500,
-                        placeholder="Number",
-                        min=500, max=500000000, step=500,
-                        className = "d-flex flex-wrap text-center p-3",
+                html.Div([
+                    html.Div(
+                        children = dcc.Input(
+                            id = "Principal",
+                            type="number",
+                            value= 500,
+                            placeholder="Number",
+                            min=500, max=500000000, step=500,
+                            className = "m-1 p-2"
+                        ),
+                        className = "m-1 p-2"
                     ),
+
+                    html.Div(
+                        children = dcc.Dropdown(
+                            id = "Category",
+                            options=[
+                                {'label': 'Income', 'value': 1},
+                                {'label': 'Expenditure', 'value': -1},
+                            ],
+                            value = 1,
+                            placeholder="Asset Category",
+                            className = "m-1 p-2"
+                        ),
+                        className = "flex-fill m-1 p-2"
+                    ),
+                ],
+                className = "d-flex justify-content-center"
                 ),
 
                 html.H3(
@@ -235,19 +253,20 @@ app.layout = dbc.Container([
 )
 
 @app.callback(
-    Output('table', 'data'),
+    [Output('table', 'data'),
+    Output('save-data', 'n_clicks')],
     [Input('save-data', 'n_clicks'), 
     Input('Principal', 'value'), 
+    Input('Category', 'value'),
     Input('Rate', 'value'), 
     Input('Frequency', 'value'),
     Input('DateRange', 'start_date'),
     Input('DateRange', 'end_date')]
 )
-def add_row(n_clicks, principal, rate, frequency, startDate, endDate):
-    row = {'Principal': principal, 'Rate': rate, 'Frequency': frequency, 'Start Date': startDate, 'End Date': endDate}
-    if n_clicks > 0:  
-        df.append(row, ignore_index=True)
-        print(df)
+def addData(n_clicks, principal, category, rate, frequency, startDate, endDate):
+    if n_clicks > 0:
+        df.loc[len(df.index)] = [principal, category, rate, frequency, startDate, endDate]
+    return df.to_dict('records'), 0
 
 if __name__ == '__main__':
     app.run_server(debug=True)
